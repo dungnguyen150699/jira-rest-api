@@ -40,11 +40,24 @@
         </dependency>
 
         <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-java-client-spring</artifactId>
+            <version>5.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-rest-java-client-api</artifactId>
+            <version>5.2.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.atlassian.fugue</groupId>
             <artifactId>fugue</artifactId>
-            <version>4.7.2</version>
-            <scope>provided</scope>
+            <version>5.0.0</version>
+<!--            <scope>provided</scope>-->
         </dependency>
+
 
     </dependencies>
 
