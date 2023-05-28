@@ -2,11 +2,14 @@ package dungnt.ptit.jiraspringboot;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.OptionalIterable;
 import com.atlassian.jira.rest.client.api.ProjectRestClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.UserRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Project;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.User;
@@ -19,6 +22,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class JiraSpringbootApplication implements CommandLineRunner {
     @Autowired
     private JiraRestClient restClient;
+
 
     public List<Status> getStatuses() {
         try {
@@ -72,23 +77,38 @@ public class JiraSpringbootApplication implements CommandLineRunner {
 
     }
 
+    public List<IssueType> getAllIssueType(){
+        List<BasicProject> basicProjects = new ArrayList<>();
+        List<IssueType> issueTypeList = new ArrayList<>();
+//        IssueRestClient issueRestClient = restClient.getIssueClient();
+        ProjectRestClient projectRestClient = restClient.getProjectClient();
+        Iterator<BasicProject> projectIterator = projectRestClient.getAllProjects().claim().iterator();
+        iteratorToList(basicProjects,projectIterator);
+
+        if(!basicProjects.isEmpty()){
+            BasicProject basicProjectFirst = basicProjects.get(0);
+            Project project = projectRestClient.getProject(basicProjectFirst.getKey()).claim();
+            final OptionalIterable<IssueType> issueTypes = project.getIssueTypes();
+            if(issueTypes.isSupported()){
+                final Iterator<IssueType> iterator = issueTypes.iterator();
+                iteratorToList(issueTypeList,iterator);
+            }
+        }
+        return issueTypeList;
+    }
+
+    public <T> void iteratorToList(List<T> lists, Iterator<T> iterator){
+        while (iterator.hasNext()){
+            lists.add(iterator.next());
+        }
+    }
+
+
     @Override
     public void run(String... args) throws Exception {
-        ProjectRestClient projectClient = restClient.getProjectClient();
-        Promise<Iterable<BasicProject>> allProjects = projectClient.getAllProjects();
-        allProjects.done(item -> item.forEach(i-> System.out.println(i.getName())));
-
-        Iterable<BasicProject> basicProjects = allProjects.get();
-        Iterator<BasicProject> basicProjectIterator = basicProjects.iterator();
-        while (basicProjectIterator.hasNext()){
-            System.out.println(basicProjectIterator.next().getName());
-        }
-//        createIssue("SCRUM",1l,"xx");
-//        Issue issue = getIssue("ST-3");
-//        System.out.println(issue.getKey());
-//        System.out.println(issue.getAttachments());
-//        searchJql();
-//        getStatuses();
-//        getUser();
+        final List<IssueType> allIssueType = getAllIssueType();
+        allIssueType.stream().forEach(issueType -> {
+            System.out.println(issueType.getName());
+        });
     }
 }
